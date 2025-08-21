@@ -16,7 +16,7 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) Create(user *User) error {
-	_, err := r.db.Exec(`INSERT INTO users (id, email, password_hash, created_at, updated_at)
+	_, err := repo.db.Exec(`INSERT INTO users (id, email, password_hash, created_at, updated_at)
          VALUES ($1, $2, $3, NOW(), NOW())`,
 		 user.ID, user.Email, user.PasswordHash,
 	)
