@@ -4,8 +4,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	userapi "github.com/lorenas/PaceIt/internal/api"
 	"github.com/lorenas/PaceIt/internal/db"
+	"github.com/lorenas/PaceIt/internal/user"
 )
 
 func main() {
@@ -20,5 +23,16 @@ func main() {
     if port == "" {
         port = "8080"
     }
-    log.Println("db connection ok, placeholder app on port", port)
+
+    userRepo := user.NewRepository(conn)
+    registerService := user.NewRegisterUserService(userRepo)
+    userHandler := userapi.NewUserHandler(registerService)
+
+    router := gin.Default()
+    router.POST("/api/v1/users", userHandler.Register)
+
+    log.Println("listening on :" + port)
+    if err := router.Run(":" + port); err != nil {
+        log.Fatal(err)
+    }
 }
