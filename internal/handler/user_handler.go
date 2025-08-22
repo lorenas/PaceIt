@@ -9,33 +9,40 @@ import (
 	"github.com/lorenas/PaceIt/internal/service"
 )
 
-type UserHandler interface {
+type UserHandling interface {
 	Register(context *gin.Context)
 }
-type userHandler struct {
+type UserHandler struct {
 	registerService service.RegisterUserService
 }
 
-func NewUserHandler(registerService service.RegisterUserService) UserHandler {
-	return &userHandler{
+func NewUserHandler(registerService service.RegisterUserService) UserHandling {
+	return &UserHandler{
 		registerService: registerService,
 	}
 }
 
-type createUserRequest struct {
+func (handler *UserHandler) RegisterRoutes(router *gin.Engine) {
+    api := router.Group("/api/v1")
+    {
+        api.POST("/register", handler.Register)
+    }
+}
+
+type CreateUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type createUserResponse struct {
+type CreateUserResponse struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (handler *userHandler) Register(context *gin.Context) {
-	var req createUserRequest
+func (handler *UserHandler) Register(context *gin.Context) {
+	var req CreateUserRequest
 	if err := context.ShouldBindJSON(&req); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})
 		return
@@ -56,7 +63,7 @@ func (handler *userHandler) Register(context *gin.Context) {
 		return
 	}
 
-	resp := createUserResponse{
+	resp := CreateUserResponse{
 		ID:        userDto.ID.String(),
 		Email:     userDto.Email,
 		CreatedAt: userDto.CreatedAt.UTC().Format(time.RFC3339),
