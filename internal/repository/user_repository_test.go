@@ -11,12 +11,12 @@ import (
 	"github.com/lorenas/PaceIt/internal/entity"
 )
 
-func newMockRepo(t *testing.T) (*UserRepository, sqlmock.Sqlmock) {
+func newMockRepo(t *testing.T) (UserRepository, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("sqlMock.New: %v", err)
 	}
-	return NewRepository(db), mock
+	return NewUserRepository(db), mock
 }
 
 func TestRepository_Create(t *testing.T) {

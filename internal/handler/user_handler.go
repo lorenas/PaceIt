@@ -1,4 +1,4 @@
-package userapi
+package handler
 
 import (
 	"net/http"
@@ -9,12 +9,15 @@ import (
 	"github.com/lorenas/PaceIt/internal/service"
 )
 
-type UserHandler struct {
-	registerService *service.RegisterUserService
+type UserHandler interface {
+	Register(context *gin.Context)
+}
+type userHandler struct {
+	registerService service.RegisterUserService
 }
 
-func NewUserHandler(registerService *service.RegisterUserService) *UserHandler {
-	return &UserHandler{
+func NewUserHandler(registerService service.RegisterUserService) UserHandler {
+	return &userHandler{
 		registerService: registerService,
 	}
 }
@@ -31,7 +34,7 @@ type createUserResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (handler *UserHandler) Register(context *gin.Context) {
+func (handler *userHandler) Register(context *gin.Context) {
 	var req createUserRequest
 	if err := context.ShouldBindJSON(&req); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})

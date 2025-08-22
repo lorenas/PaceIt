@@ -16,25 +16,36 @@ var (
 	ErrInvalidPassword = errors.New("invalid password")
 )
 
-type RegisterUserService struct {
-	repo *repository.UserRepository
+type RegisterUserService interface {
+	Register(email, password string) (*entity.User, error)
 }
 
-func NewRegisterUserService(repo *repository.UserRepository) *RegisterUserService {
-	return &RegisterUserService{
+type registerUserService struct {
+	repo repository.UserRepository
+}
+
+func NewRegisterUserService(repo repository.UserRepository) RegisterUserService {
+	return &registerUserService{
 		repo: repo,
 	}
 }
 
-func (service *RegisterUserService) Register(email, password string) (*entity.User, error) {
+func (service *registerUserService) Register(email, password string) (*entity.User, error) {
 	email = strings.TrimSpace(email)
 
-	if err := service.isValidEmail(email); err != nil {
+    if !isValidEmail(email) {
+        return nil, ErrInvalidEmail
+    }
+    if !isValidPassword(password) {
+        return nil, ErrInvalidPassword
+    }
+
+	existing, err := service.repo.GetByEmail(email)
+	if err != nil {
 		return nil, err
 	}
-
-	if err := service.isValidPassword(password); err != nil {
-		return nil, err
+	if existing != nil {
+		return nil, repository.ErrEmailTaken
 	}
 
 	hashBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -57,24 +68,10 @@ func (service *RegisterUserService) Register(email, password string) (*entity.Us
 	return newUser, nil
 }
 
-func (service *RegisterUserService) isValidEmail(email string) error {
-	isValid := strings.Contains(email, "@") && strings.Contains(email, ".") && email != ""
-	if !isValid {
-		return ErrInvalidEmail
-	}
-	existing, err := service.repo.GetByEmail(email)
-	if err != nil {
-		return err
-	}
-	if existing != nil {
-		return repository.ErrEmailTaken
-	}
-	return nil
+func isValidEmail(email string) bool {
+    return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
-func (service *RegisterUserService) isValidPassword(password string) error {
-	if len(password) >= 8 {
-		return nil
-	}
-	return ErrInvalidPassword
+func isValidPassword(password string) bool {
+    return len(password) >= 8
 }

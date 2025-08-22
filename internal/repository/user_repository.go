@@ -8,15 +8,20 @@ import (
 	"github.com/lorenas/PaceIt/internal/entity"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+    GetByEmail(email string) (*entity.User, error)
+    Create(user *entity.User) error
+}
+
+type userRepository struct {
 	db *sql.DB
 }
 
-func NewRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &userRepository{db: db}
 }
 
-func (repo *UserRepository) Create(user *entity.User) error {
+func (repo *userRepository) Create(user *entity.User) error {
 	_, err := repo.db.Exec(`INSERT INTO users (id, email, password_hash, created_at, updated_at)
          VALUES ($1, $2, $3, NOW(), NOW())`,
 		user.ID, user.Email, user.PasswordHash,
@@ -36,7 +41,7 @@ func (repo *UserRepository) Create(user *entity.User) error {
 	return nil
 }
 
-func (repo *UserRepository) GetByEmail(email string) (*entity.User, error) {
+func (repo *userRepository) GetByEmail(email string) (*entity.User, error) {
 	var user entity.User
 	err := repo.db.QueryRow(
 		`SELECT id,email,password_hash,created_at,updated_at,deleted_at
