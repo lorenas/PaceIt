@@ -1,30 +1,32 @@
-package user
+package service
 
 import (
-    "errors"
-    "strings"
-    "time"
+	"errors"
+	"strings"
+	"time"
 
-    "github.com/google/uuid"
-    "golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
+	"github.com/lorenas/PaceIt/internal/entity"
+	"github.com/lorenas/PaceIt/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-    ErrInvalidEmail    = errors.New("invalid email")
-    ErrInvalidPassword = errors.New("invalid password")
+	ErrInvalidEmail    = errors.New("invalid email")
+	ErrInvalidPassword = errors.New("invalid password")
 )
 
 type RegisterUserService struct {
-	repo *Repository
+	repo *repository.UserRepository
 }
 
-func NewRegisterUserService(repo *Repository) *RegisterUserService {
+func NewRegisterUserService(repo *repository.UserRepository) *RegisterUserService {
 	return &RegisterUserService{
 		repo: repo,
 	}
 }
 
-func (service *RegisterUserService) Register(email, password string) (*User, error) {
+func (service *RegisterUserService) Register(email, password string) (*entity.User, error) {
 	email = strings.TrimSpace(email)
 
 	if err := service.isValidEmail(email); err != nil {
@@ -36,12 +38,12 @@ func (service *RegisterUserService) Register(email, password string) (*User, err
 	}
 
 	hashBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
 	now := time.Now()
-	newUser := &User {
+	newUser := &entity.User{
 		ID:           uuid.New(),
 		Email:        email,
 		PasswordHash: string(hashBytes),
@@ -62,11 +64,11 @@ func (service *RegisterUserService) isValidEmail(email string) error {
 	}
 	existing, err := service.repo.GetByEmail(email)
 	if err != nil {
-        return  err
-    }
-    if existing != nil {
-        return ErrEmailTaken
-    }
+		return err
+	}
+	if existing != nil {
+		return repository.ErrEmailTaken
+	}
 	return nil
 }
 

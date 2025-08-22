@@ -1,24 +1,25 @@
-package user
+package repository
 
 import (
 	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lorenas/PaceIt/internal/entity"
 )
 
-type Repository struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{db: db}
+func NewRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
 
-func (repo *Repository) Create(user *User) error {
+func (repo *UserRepository) Create(user *entity.User) error {
 	_, err := repo.db.Exec(`INSERT INTO users (id, email, password_hash, created_at, updated_at)
          VALUES ($1, $2, $3, NOW(), NOW())`,
-		 user.ID, user.Email, user.PasswordHash,
+		user.ID, user.Email, user.PasswordHash,
 	)
 
 	if err != nil {
@@ -31,12 +32,12 @@ func (repo *Repository) Create(user *User) error {
 		}
 		return err
 	}
-	
+
 	return nil
 }
 
-func (repo *Repository) GetByEmail(email string) (*User, error) {
-	var user User
+func (repo *UserRepository) GetByEmail(email string) (*entity.User, error) {
+	var user entity.User
 	err := repo.db.QueryRow(
 		`SELECT id,email,password_hash,created_at,updated_at,deleted_at
        FROM users

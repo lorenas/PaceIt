@@ -1,10 +1,10 @@
-package db
+package infrastructure
 
 import (
 	"database/sql"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"os"
 	"time"
-	  _ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func Open() (*sql.DB, error) {
